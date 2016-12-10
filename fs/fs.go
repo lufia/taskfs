@@ -43,7 +43,7 @@ func (f *FileInfo) IsDir() bool {
 type Dir interface {
 	Node
 	Stat() *FileInfo
-	ReadDir() []Dir
+	ReadDir() ([]Dir, error)
 }
 
 type Root struct {
@@ -73,30 +73,53 @@ func (root *Root) Stat() *FileInfo {
 	return &root.FileInfo
 }
 
-func (root *Root) ReadDir() []Dir {
-	a := make([]Dir, 0, len(root.services))
-	for name := range root.services {
+func (root *Root) ReadDir() ([]Dir, error) {
+	dirs := make([]Dir, 0, len(root.services))
+	for name, svc := range root.services {
 		dir := &ServiceDir{
 			Node: NewNode(),
 			FileInfo: FileInfo{
 				Name: name,
 				Mode: os.ModeDir | 0755,
 			},
+			svc: svc,
 		}
-		a = append(a, dir)
+		dirs = append(dirs, dir)
 	}
-	return a
+	return dirs, nil
 }
 
 type ServiceDir struct {
 	Node
 	FileInfo
+	svc Service
 }
 
 func (dir *ServiceDir) Stat() *FileInfo {
 	return &dir.FileInfo
 }
 
-func (dir *ServiceDir) ReadDir() []Dir {
-	return []Dir{}
+func (dir *ServiceDir) ReadDir() ([]Dir, error) {
+	a, err := dir.svc.List()
+	if err != nil {
+		return nil, err
+	}
+	dirs := make([]Dir, len(a))
+	for i, _ := range a {
+		dirs[i] = &ArticleDir{}
+	}
+	return []Dir{}, nil
+}
+
+type ArticleDir struct {
+	Node
+	FileInfo
+}
+
+func (dir *ArticleDir) Stat() *FileInfo {
+	return &dir.FileInfo
+}
+
+func (dir *ArticleDir) ReadDir() ([]Dir, error) {
+	return []Dir{}, nil
 }

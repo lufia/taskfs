@@ -67,7 +67,10 @@ func (root *Root) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) f
 
 func (root *Root) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
 	p := root.Inode()
-	kids := root.ReadDir()
+	kids, err := root.ReadDir()
+	if err != nil {
+		return nil, fuse.EIO
+	}
 	a := make([]fuse.DirEntry, len(kids))
 	for i, kid := range kids {
 		info := kid.Stat()
