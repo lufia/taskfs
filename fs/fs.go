@@ -95,7 +95,8 @@ func (root *Root) ReadDir() ([]Dir, error) {
 type ServiceDir struct {
 	Node
 	FileInfo
-	svc Service
+	svc   Service
+	cache []Dir
 }
 
 func (dir *ServiceDir) Stat() *FileInfo {
@@ -103,6 +104,9 @@ func (dir *ServiceDir) Stat() *FileInfo {
 }
 
 func (dir *ServiceDir) ReadDir() ([]Dir, error) {
+	if dir.cache != nil {
+		return dir.cache, nil
+	}
 	a, err := dir.svc.List()
 	if err != nil {
 		return nil, err
@@ -120,7 +124,8 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 			task: task,
 		}
 	}
-	return []Dir{}, nil
+	dir.cache = dirs
+	return dirs, nil
 }
 
 type TaskDir struct {
