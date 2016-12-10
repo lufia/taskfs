@@ -66,8 +66,21 @@ func (root *Root) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) f
 }
 
 func (root *Root) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
-	p := root.Inode()
-	kids, err := root.ReadDir()
+	return readDir(root)
+}
+
+func (dir *ServiceDir) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) fuse.Status {
+	dir.FileInfo.FillAttr(out)
+	return fuse.OK
+}
+
+func (dir *ServiceDir) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
+	return readDir(dir)
+}
+
+func readDir(dir Dir) ([]fuse.DirEntry, fuse.Status) {
+	p := dir.Inode()
+	kids, err := dir.ReadDir()
 	if err != nil {
 		return nil, fuse.EIO
 	}
@@ -80,9 +93,4 @@ func (root *Root) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
 		info.FillDirEntry(&a[i])
 	}
 	return a, fuse.OK
-}
-
-func (dir *ServiceDir) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) fuse.Status {
-	dir.FileInfo.FillAttr(out)
-	return fuse.OK
 }

@@ -16,7 +16,7 @@ import (
 )
 
 type Task interface {
-	TaskID() uint32
+	Key() string
 	Subject() string
 	Message() string
 	Creation() time.Time
@@ -74,13 +74,16 @@ func (root *Root) Stat() *FileInfo {
 }
 
 func (root *Root) ReadDir() ([]Dir, error) {
+	now := time.Now()
 	dirs := make([]Dir, 0, len(root.services))
 	for name, svc := range root.services {
 		dir := &ServiceDir{
 			Node: NewNode(),
 			FileInfo: FileInfo{
-				Name: name,
-				Mode: os.ModeDir | 0755,
+				Name:     name,
+				Mode:     os.ModeDir | 0755,
+				Creation: now,
+				LastMod:  now,
 			},
 			svc: svc,
 		}
@@ -105,8 +108,17 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 		return nil, err
 	}
 	dirs := make([]Dir, len(a))
-	for i, _ := range a {
-		dirs[i] = &TaskDir{}
+	for i, task := range a {
+		dirs[i] = &TaskDir{
+			Node: NewNode(),
+			FileInfo: FileInfo{
+				Name:     task.Key(),
+				Mode:     os.ModeDir | 0755,
+				Creation: task.Creation(),
+				LastMod:  task.LastMod(),
+			},
+			task: task,
+		}
 	}
 	return []Dir{}, nil
 }
@@ -114,6 +126,7 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 type TaskDir struct {
 	Node
 	FileInfo
+	task Task
 }
 
 func (dir *TaskDir) Stat() *FileInfo {

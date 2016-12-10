@@ -1,6 +1,7 @@
 package github
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -12,8 +13,8 @@ import (
 
 type Issue github.Issue
 
-func (p *Issue) TaskID() uint32 {
-	return uint32(*p.ID)
+func (p *Issue) Key() string {
+	return fmt.Sprintf("%d", *p.ID)
 }
 
 func (p *Issue) Subject() string {
