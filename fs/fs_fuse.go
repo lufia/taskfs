@@ -38,11 +38,11 @@ func (f *FileInfo) FillDirEntry(out *fuse.DirEntry) {
 	}
 }
 
-func (root *Root) MountAndServe(mtpt string) error {
+func (root *Root) MountAndServe(mtpt string, debug bool) error {
 	opts := nodefs.Options{
 		AttrTimeout:  time.Second,
 		EntryTimeout: time.Second,
-		Debug:        false,
+		Debug:        debug,
 	}
 	s, _, err := nodefs.MountRoot(mtpt, root, &opts)
 	if err != nil {

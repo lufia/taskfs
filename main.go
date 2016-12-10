@@ -11,6 +11,7 @@ import (
 var (
 	accessToken = flag.String("t", "", "access token")
 	baseURL     = flag.String("url", "", "endpoint url")
+	debug       = flag.Bool("d", false, "turn on debug print")
 )
 
 func main() {
@@ -24,7 +25,7 @@ func main() {
 	}
 	root := fs.NewRoot()
 	root.CreateService(s)
-	if err := root.MountAndServe("x"); err != nil {
+	if err := root.MountAndServe("x", *debug); err != nil {
 		log.Fatal(err)
 	}
 }
