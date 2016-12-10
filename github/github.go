@@ -68,6 +68,10 @@ func NewService(config *Config) (*Service, error) {
 	return &Service{c: c}, nil
 }
 
+func (p *Service) Name() string {
+	return "github"
+}
+
 func (p *Service) List() ([]fs.Article, error) {
 	var a []fs.Article
 	var opt github.IssueListOptions

@@ -11,9 +11,8 @@ mtpt/
 */
 
 import (
+	"os"
 	"time"
-
-	"github.com/hanwen/go-fuse/fuse"
 )
 
 type Article interface {
@@ -29,15 +28,34 @@ type Service interface {
 	List() ([]Article, error)
 }
 
+type FileInfo struct {
+	Name     string
+	Size     int64
+	Mode     os.FileMode
+	Creation time.Time
+	LastMod  time.Time
+}
+
+func (f *FileInfo) IsDir() bool {
+	return f.Mode&os.ModeDir != 0
+}
+
 type Root struct {
 	Dir
+	FileInfo
 	services map[string]Service
 }
 
 func NewRoot() *Root {
+	now := time.Now()
 	return &Root{
 		Dir: NewDir(),
-		srv: make(map[string]Service),
+		FileInfo: FileInfo{
+			Mode:     os.ModeDir | 0777,
+			Creation: now,
+			LastMod:  now,
+		},
+		services: make(map[string]Service),
 	}
 }
 
@@ -45,16 +63,14 @@ func (root *Root) CreateService(srv Service) {
 	root.services[srv.Name()] = srv
 }
 
-func (root *Root) ReadDir() []string {
-	a := make([]string, 0, len(root.services))
+func (root *Root) ReadDir() []*FileInfo {
+	a := make([]*FileInfo, 0, len(root.services))
 	for name := range root.services {
-		a = append(a, name)
+		a = append(a, &FileInfo{
+			Name: name,
+			Size: 0,
+			Mode: os.ModeDir | 0777,
+		})
 	}
 	return a
-}
-
-func (root *Root) MountAndServe(mtpt string) error {
-	if err := mountAndServe(&dir); err != nil {
-		return err
-	}
 }

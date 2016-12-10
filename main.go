@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/lufia/taskfs/fs"
 	"github.com/lufia/taskfs/github"
 )
 
@@ -21,9 +22,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	root := NewRoot()
+	root := fs.NewRoot()
 	root.CreateService(s)
-	if err := root.MountAndServe(); err != nil {
+	if err := root.MountAndServe("x"); err != nil {
 		log.Fatal(err)
 	}
 }
