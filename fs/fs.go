@@ -11,6 +11,7 @@ mtpt/
 */
 
 import (
+	"errors"
 	"os"
 	"time"
 )
@@ -44,7 +45,10 @@ type Dir interface {
 	Node
 	Stat() *FileInfo
 	ReadDir() ([]Dir, error)
+	ReadFile() ([]byte, error)
 }
+
+var errProtocol = errors.New("protocol botch")
 
 type Root struct {
 	Node
@@ -92,6 +96,10 @@ func (root *Root) ReadDir() ([]Dir, error) {
 	return dirs, nil
 }
 
+func (*Root) ReadFile() ([]byte, error) {
+	return nil, errProtocol
+}
+
 type ServiceDir struct {
 	Node
 	FileInfo
@@ -128,10 +136,15 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 	return dirs, nil
 }
 
+func (*ServiceDir) ReadFile() ([]byte, error) {
+	return nil, errProtocol
+}
+
 type TaskDir struct {
 	Node
 	FileInfo
-	task Task
+	task  Task
+	files []Dir
 }
 
 func (dir *TaskDir) Stat() *FileInfo {
@@ -139,5 +152,49 @@ func (dir *TaskDir) Stat() *FileInfo {
 }
 
 func (dir *TaskDir) ReadDir() ([]Dir, error) {
-	return []Dir{}, nil
+	if dir.files != nil {
+		return dir.files, nil
+	}
+	dir.files = []Dir{
+		dir.newText("subject", dir.task.Subject),
+		dir.newText("message", dir.task.Message),
+	}
+	return dir.files, nil
+}
+
+func (*TaskDir) ReadFile() ([]byte, error) {
+	return nil, errProtocol
+}
+
+func (dir *TaskDir) newText(name string, f func() string) *Text {
+	return &Text{
+		Node: NewNode(),
+		FileInfo: FileInfo{
+			Name:     name,
+			Mode:     0644,
+			Creation: dir.task.Creation(),
+			LastMod:  dir.task.LastMod(),
+		},
+		f: f,
+	}
+}
+
+type Text struct {
+	Node
+	FileInfo
+	f func() string
+}
+
+func (t *Text) Stat() *FileInfo {
+	return &t.FileInfo
+}
+
+func (t *Text) ReadDir() ([]Dir, error) {
+	// this method isn't going to be called.
+	return nil, errProtocol
+}
+
+func (t *Text) ReadFile() ([]byte, error) {
+	s := t.f()
+	return []byte(s), nil
 }

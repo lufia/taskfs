@@ -18,16 +18,6 @@ func NewNode() Node {
 	return nodefs.NewDefaultNode()
 }
 
-type File struct {
-	nodefs.File
-}
-
-func NewFile(p []byte) File {
-	return File{
-		File: nodefs.NewDataFile(p),
-	}
-}
-
 func (f *FileInfo) FillAttr(out *fuse.Attr) {
 	out.Mode = uint32(f.Mode & os.ModePerm)
 	if f.IsDir() {
@@ -50,7 +40,7 @@ func (root *Root) MountAndServe(mtpt string) error {
 	opts := nodefs.Options{
 		AttrTimeout:  time.Second,
 		EntryTimeout: time.Second,
-		Debug:        false,
+		Debug:        true,
 	}
 	s, _, err := nodefs.MountRoot(mtpt, root, &opts)
 	if err != nil {
@@ -76,6 +66,35 @@ func (dir *ServiceDir) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Conte
 
 func (dir *ServiceDir) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
 	return readDir(dir)
+}
+
+func (dir *TaskDir) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) fuse.Status {
+	dir.FileInfo.FillAttr(out)
+	return fuse.OK
+}
+
+func (dir *TaskDir) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
+	return readDir(dir)
+}
+
+func (t *Text) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) fuse.Status {
+	t.FileInfo.FillAttr(out)
+	return fuse.OK
+}
+
+func (t *Text) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
+	return nil, fuse.EINVAL
+}
+
+func (t *Text) Open(flags uint32, ctx *fuse.Context) (nodefs.File, fuse.Status) {
+	if flags&fuse.O_ANYWRITE != 0 {
+		return nil, fuse.EPERM
+	}
+	p, err := t.ReadFile()
+	if err != nil {
+		return nil, fuse.EIO
+	}
+	return nodefs.NewDataFile(p), fuse.OK
 }
 
 func readDir(dir Dir) ([]fuse.DirEntry, fuse.Status) {
