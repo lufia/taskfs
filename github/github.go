@@ -12,7 +12,7 @@ import (
 
 type Issue github.Issue
 
-func (p *Issue) ArticleID() uint32 {
+func (p *Issue) TaskID() uint32 {
 	return uint32(*p.ID)
 }
 
@@ -72,8 +72,8 @@ func (p *Service) Name() string {
 	return "github"
 }
 
-func (p *Service) List() ([]fs.Article, error) {
-	var a []fs.Article
+func (p *Service) List() ([]fs.Task, error) {
+	var a []fs.Task
 	var opt github.IssueListOptions
 	for {
 		b, resp, err := p.c.Issues.List(true, &opt)
@@ -89,7 +89,7 @@ func (p *Service) List() ([]fs.Article, error) {
 	return a, nil
 }
 
-func (*Service) appendIssues(a []fs.Article, b []*github.Issue) []fs.Article {
+func (*Service) appendIssues(a []fs.Task, b []*github.Issue) []fs.Task {
 	for _, v := range b {
 		a = append(a, (*Issue)(v))
 	}

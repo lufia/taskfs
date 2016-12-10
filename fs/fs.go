@@ -15,8 +15,8 @@ import (
 	"time"
 )
 
-type Article interface {
-	ArticleID() uint32
+type Task interface {
+	TaskID() uint32
 	Subject() string
 	Message() string
 	Creation() time.Time
@@ -25,7 +25,7 @@ type Article interface {
 
 type Service interface {
 	Name() string
-	List() ([]Article, error)
+	List() ([]Task, error)
 }
 
 type FileInfo struct {
@@ -106,20 +106,20 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 	}
 	dirs := make([]Dir, len(a))
 	for i, _ := range a {
-		dirs[i] = &ArticleDir{}
+		dirs[i] = &TaskDir{}
 	}
 	return []Dir{}, nil
 }
 
-type ArticleDir struct {
+type TaskDir struct {
 	Node
 	FileInfo
 }
 
-func (dir *ArticleDir) Stat() *FileInfo {
+func (dir *TaskDir) Stat() *FileInfo {
 	return &dir.FileInfo
 }
 
-func (dir *ArticleDir) ReadDir() ([]Dir, error) {
+func (dir *TaskDir) ReadDir() ([]Dir, error) {
 	return []Dir{}, nil
 }
