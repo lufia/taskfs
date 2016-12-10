@@ -10,14 +10,12 @@ import (
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 )
 
-type Dir struct {
+type Node interface {
 	nodefs.Node
 }
 
-func NewDir() Dir {
-	return Dir{
-		Node: nodefs.NewDefaultNode(),
-	}
+func NewNode() Node {
+	return nodefs.NewDefaultNode()
 }
 
 type File struct {
@@ -68,10 +66,20 @@ func (root *Root) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) f
 }
 
 func (root *Root) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
+	p := root.Inode()
 	kids := root.ReadDir()
 	a := make([]fuse.DirEntry, len(kids))
 	for i, kid := range kids {
-		kid.FillDirEntry(&a[i])
+		info := kid.Stat()
+		if p.GetChild(info.Name) == nil {
+			p.NewChild(info.Name, info.IsDir(), kid)
+		}
+		info.FillDirEntry(&a[i])
 	}
 	return a, fuse.OK
+}
+
+func (dir *ServiceDir) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) fuse.Status {
+	dir.FileInfo.FillAttr(out)
+	return fuse.OK
 }

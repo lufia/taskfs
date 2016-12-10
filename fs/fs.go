@@ -40,8 +40,14 @@ func (f *FileInfo) IsDir() bool {
 	return f.Mode&os.ModeDir != 0
 }
 
+type Dir interface {
+	Node
+	Stat() *FileInfo
+	ReadDir() []Dir
+}
+
 type Root struct {
-	Dir
+	Node
 	FileInfo
 	services map[string]Service
 }
@@ -49,7 +55,7 @@ type Root struct {
 func NewRoot() *Root {
 	now := time.Now()
 	return &Root{
-		Dir: NewDir(),
+		Node: NewNode(),
 		FileInfo: FileInfo{
 			Mode:     os.ModeDir | 0777,
 			Creation: now,
@@ -63,14 +69,34 @@ func (root *Root) CreateService(srv Service) {
 	root.services[srv.Name()] = srv
 }
 
-func (root *Root) ReadDir() []*FileInfo {
-	a := make([]*FileInfo, 0, len(root.services))
+func (root *Root) Stat() *FileInfo {
+	return &root.FileInfo
+}
+
+func (root *Root) ReadDir() []Dir {
+	a := make([]Dir, 0, len(root.services))
 	for name := range root.services {
-		a = append(a, &FileInfo{
-			Name: name,
-			Size: 0,
-			Mode: os.ModeDir | 0777,
-		})
+		dir := &ServiceDir{
+			Node: NewNode(),
+			FileInfo: FileInfo{
+				Name: name,
+				Mode: os.ModeDir | 0755,
+			},
+		}
+		a = append(a, dir)
 	}
 	return a
+}
+
+type ServiceDir struct {
+	Node
+	FileInfo
+}
+
+func (dir *ServiceDir) Stat() *FileInfo {
+	return &dir.FileInfo
+}
+
+func (dir *ServiceDir) ReadDir() []Dir {
+	return []Dir{}
 }
