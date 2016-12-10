@@ -21,12 +21,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	a, err := s.List()
-	if err != nil {
+	root := NewRoot()
+	root.CreateService(s)
+	if err := root.MountAndServe(); err != nil {
 		log.Fatal(err)
-	}
-	for _, v := range a {
-		log.Println(v.ArticleID(), v.Subject())
-		log.Println(v.Message())
 	}
 }
