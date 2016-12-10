@@ -156,8 +156,8 @@ func (dir *TaskDir) ReadDir() ([]Dir, error) {
 		return dir.files, nil
 	}
 	dir.files = []Dir{
-		dir.newText("subject", dir.task.Subject),
-		dir.newText("message", dir.task.Message),
+		dir.newText("subject", dir.task.Subject()),
+		dir.newText("message", dir.task.Message()),
 	}
 	return dir.files, nil
 }
@@ -166,23 +166,25 @@ func (*TaskDir) ReadFile() ([]byte, error) {
 	return nil, errProtocol
 }
 
-func (dir *TaskDir) newText(name string, f func() string) *Text {
+func (dir *TaskDir) newText(name, s string) *Text {
+	data := []byte(s)
 	return &Text{
 		Node: NewNode(),
 		FileInfo: FileInfo{
 			Name:     name,
+			Size:     int64(len(data)),
 			Mode:     0644,
 			Creation: dir.task.Creation(),
 			LastMod:  dir.task.LastMod(),
 		},
-		f: f,
+		data: data,
 	}
 }
 
 type Text struct {
 	Node
 	FileInfo
-	f func() string
+	data []byte
 }
 
 func (t *Text) Stat() *FileInfo {
@@ -195,6 +197,5 @@ func (t *Text) ReadDir() ([]Dir, error) {
 }
 
 func (t *Text) ReadFile() ([]byte, error) {
-	s := t.f()
-	return []byte(s), nil
+	return t.data, nil
 }

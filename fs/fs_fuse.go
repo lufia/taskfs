@@ -19,9 +19,11 @@ func NewNode() Node {
 }
 
 func (f *FileInfo) FillAttr(out *fuse.Attr) {
-	out.Mode = uint32(f.Mode & os.ModePerm)
+	perm := uint32(f.Mode & os.ModePerm)
 	if f.IsDir() {
-		out.Mode |= fuse.S_IFDIR
+		out.Mode = fuse.S_IFDIR | perm
+	} else {
+		out.Mode = fuse.S_IFREG | perm
 	}
 	out.Size = uint64(f.Size)
 	out.Atime = uint64(f.LastMod.Unix())
