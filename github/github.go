@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/github"
-	"github.com/lufia/ac2016/fs"
+	"github.com/lufia/taskfs/fs"
 	"golang.org/x/oauth2"
 )
 

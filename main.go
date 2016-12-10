@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/lufia/ac2016/github"
+	"github.com/lufia/taskfs/github"
 )
 
 var (
