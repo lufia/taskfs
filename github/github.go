@@ -11,30 +11,98 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type Issue github.Issue
+type Comment struct {
+	seq     int
+	comment *github.IssueComment
+}
+
+func NewComment(seq int, comment *github.IssueComment) *Comment {
+	return &Comment{
+		seq:     seq,
+		comment: comment,
+	}
+}
+
+func (p *Comment) Key() string {
+	return fmt.Sprintf("%d", p.seq)
+}
+
+func (p *Comment) Message() string {
+	return *p.comment.Body
+}
+
+func (p *Comment) Creation() time.Time {
+	return *p.comment.CreatedAt
+}
+
+func (p *Comment) LastMod() time.Time {
+	return *p.comment.UpdatedAt
+}
+
+type Issue struct {
+	issue *github.Issue
+	svc   *Service
+}
 
 func (p *Issue) Key() string {
-	return fmt.Sprintf("%d", *p.ID)
+	return fmt.Sprintf("%d", *p.issue.ID)
 }
 
 func (p *Issue) Subject() string {
-	return *p.Title
+	return *p.issue.Title
 }
 
 func (p *Issue) Message() string {
-	return *p.Body
+	return *p.issue.Body
 }
 
 func (p *Issue) PermaLink() string {
-	return *p.HTMLURL
+	return *p.issue.HTMLURL
 }
 
 func (p *Issue) Creation() time.Time {
-	return *p.CreatedAt
+	return *p.issue.CreatedAt
 }
 
 func (p *Issue) LastMod() time.Time {
-	return *p.UpdatedAt
+	return *p.issue.UpdatedAt
+}
+
+func (p *Issue) Comments() (a []fs.Comment, err error) {
+	var buf []*github.IssueComment
+	page := 0
+	for {
+		var b []*github.IssueComment
+		b, page, err = p.fetchComments(page)
+		if err != nil {
+			return
+		}
+		buf = append(buf, b...)
+		if page == 0 {
+			break
+		}
+	}
+	a = make([]fs.Comment, len(buf))
+	for i, v := range buf {
+		a[i] = NewComment(i+1, v)
+	}
+	return a, nil
+}
+
+func (p *Issue) fetchComments(page int) ([]*github.IssueComment, int, error) {
+	owner := *p.issue.Repository.Owner.Login
+	if org := p.issue.Repository.Organization; org != nil {
+		owner = *org.Login
+	}
+	repo := *p.issue.Repository.Name
+	n := *p.issue.Number
+	var opt github.IssueListCommentsOptions
+	opt.Page = page
+	b, resp, err := p.svc.c.Issues.ListComments(owner, repo, n, &opt)
+	if err != nil {
+		return nil, 0, err
+	}
+	return b, resp.NextPage, nil
 }
 
 type Config struct {
@@ -94,9 +162,9 @@ func (p *Service) List() ([]fs.Task, error) {
 	return a, nil
 }
 
-func (*Service) appendIssues(a []fs.Task, b []*github.Issue) []fs.Task {
+func (p *Service) appendIssues(a []fs.Task, b []*github.Issue) []fs.Task {
 	for _, v := range b {
-		a = append(a, (*Issue)(v))
+		a = append(a, &Issue{issue: v, svc: p})
 	}
 	return a
 }

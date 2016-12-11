@@ -17,6 +17,13 @@ import (
 	"time"
 )
 
+type Comment interface {
+	Key() string
+	Message() string
+	Creation() time.Time
+	LastMod() time.Time
+}
+
 type Task interface {
 	Key() string
 	Subject() string
@@ -24,6 +31,7 @@ type Task interface {
 	PermaLink() string
 	Creation() time.Time
 	LastMod() time.Time
+	Comments() ([]Comment, error)
 }
 
 type Service interface {
@@ -176,11 +184,18 @@ func (dir *TaskDir) ReadDir() ([]Dir, error) {
 	if dir.files != nil {
 		return dir.files, nil
 	}
-	dir.files = []Dir{
-		dir.newText("subject", dir.task.Subject()),
-		dir.newText("message", dir.task.Message()),
-		dir.newText("url", dir.task.PermaLink()),
+	a, err := dir.task.Comments()
+	if err != nil {
+		return nil, err
 	}
+	kids := make([]Dir, 0, len(a)+3)
+	kids = append(kids, dir.newText("subject", dir.task.Subject()))
+	kids = append(kids, dir.newText("message", dir.task.Message()))
+	kids = append(kids, dir.newText("url", dir.task.PermaLink()))
+	for _, c := range a {
+		kids = append(kids, NewCommentText(c))
+	}
+	dir.files = kids
 	return dir.files, nil
 }
 
@@ -226,6 +241,42 @@ func (t *Text) ReadFile() ([]byte, error) {
 }
 
 func (t *Text) Refresh() {
+}
+
+type CommentText struct {
+	Node
+	FileInfo
+	data []byte
+}
+
+func NewCommentText(c Comment) *CommentText {
+	data := []byte(c.Message())
+	return &CommentText{
+		Node: NewNode(),
+		FileInfo: FileInfo{
+			Name:     c.Key(),
+			Size:     int64(len(data)),
+			Mode:     0644,
+			Creation: c.Creation(),
+			LastMod:  c.LastMod(),
+		},
+		data: data,
+	}
+}
+
+func (t *CommentText) Stat() *FileInfo {
+	return &t.FileInfo
+}
+
+func (t *CommentText) ReadDir() ([]Dir, error) {
+	return nil, errProtocol
+}
+
+func (t *CommentText) ReadFile() ([]byte, error) {
+	return t.data, nil
+}
+
+func (t *CommentText) Refresh() {
 }
 
 type Ctl struct {

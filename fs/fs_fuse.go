@@ -111,6 +111,26 @@ func (t *Text) Open(flags uint32, ctx *fuse.Context) (nodefs.File, fuse.Status) 
 	return nodefs.NewDataFile(p), fuse.OK
 }
 
+func (t *CommentText) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) fuse.Status {
+	t.FileInfo.FillAttr(out)
+	return fuse.OK
+}
+
+func (t *CommentText) OpenDir(ctx *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
+	return nil, fuse.EINVAL
+}
+
+func (t *CommentText) Open(flags uint32, ctx *fuse.Context) (nodefs.File, fuse.Status) {
+	if flags&fuse.O_ANYWRITE != 0 {
+		return nil, fuse.EPERM
+	}
+	p, err := t.ReadFile()
+	if err != nil {
+		return nil, fuse.EIO
+	}
+	return nodefs.NewDataFile(p), fuse.OK
+}
+
 func (ctl *Ctl) GetAttr(out *fuse.Attr, file nodefs.File, ctx *fuse.Context) fuse.Status {
 	ctl.FileInfo.FillAttr(out)
 	return fuse.OK
