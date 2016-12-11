@@ -25,6 +25,10 @@ func (p *Issue) Message() string {
 	return *p.Body
 }
 
+func (p *Issue) PermaLink() string {
+	return *p.HTMLURL
+}
+
 func (p *Issue) Creation() time.Time {
 	return *p.CreatedAt
 }

@@ -21,6 +21,7 @@ type Task interface {
 	Key() string
 	Subject() string
 	Message() string
+	PermaLink() string
 	Creation() time.Time
 	LastMod() time.Time
 }
@@ -178,6 +179,7 @@ func (dir *TaskDir) ReadDir() ([]Dir, error) {
 	dir.files = []Dir{
 		dir.newText("subject", dir.task.Subject()),
 		dir.newText("message", dir.task.Message()),
+		dir.newText("url", dir.task.PermaLink()),
 	}
 	return dir.files, nil
 }
