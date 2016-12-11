@@ -13,6 +13,7 @@ mtpt/
 import (
 	"errors"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -46,6 +47,7 @@ type Dir interface {
 	Stat() *FileInfo
 	ReadDir() ([]Dir, error)
 	ReadFile() ([]byte, error)
+	Refresh()
 }
 
 var errProtocol = errors.New("protocol botch")
@@ -61,7 +63,7 @@ func NewRoot() *Root {
 	return &Root{
 		Node: NewNode(),
 		FileInfo: FileInfo{
-			Mode:     os.ModeDir | 0777,
+			Mode:     os.ModeDir | 0755,
 			Creation: now,
 			LastMod:  now,
 		},
@@ -100,6 +102,9 @@ func (*Root) ReadFile() ([]byte, error) {
 	return nil, errProtocol
 }
 
+func (*Root) Refresh() {
+}
+
 type ServiceDir struct {
 	Node
 	FileInfo
@@ -119,7 +124,7 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 	if err != nil {
 		return nil, err
 	}
-	dirs := make([]Dir, len(a))
+	dirs := make([]Dir, len(a)+1)
 	for i, task := range a {
 		dirs[i] = &TaskDir{
 			Node: NewNode(),
@@ -132,12 +137,27 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 			task: task,
 		}
 	}
+	now := time.Now()
+	dirs[len(dirs)-1] = &Ctl{
+		Node: NewNode(),
+		FileInfo: FileInfo{
+			Name:     "ctl",
+			Mode:     0644,
+			Creation: now,
+			LastMod:  now,
+		},
+		parent: dir,
+	}
 	dir.cache = dirs
 	return dirs, nil
 }
 
 func (*ServiceDir) ReadFile() ([]byte, error) {
 	return nil, errProtocol
+}
+
+func (dir *ServiceDir) Refresh() {
+	dir.cache = nil
 }
 
 type TaskDir struct {
@@ -164,6 +184,9 @@ func (dir *TaskDir) ReadDir() ([]Dir, error) {
 
 func (*TaskDir) ReadFile() ([]byte, error) {
 	return nil, errProtocol
+}
+
+func (dir *TaskDir) Refresh() {
 }
 
 func (dir *TaskDir) newText(name, s string) *Text {
@@ -198,4 +221,43 @@ func (t *Text) ReadDir() ([]Dir, error) {
 
 func (t *Text) ReadFile() ([]byte, error) {
 	return t.data, nil
+}
+
+func (t *Text) Refresh() {
+}
+
+type Ctl struct {
+	Node
+	FileInfo
+	parent Dir
+}
+
+func (ctl *Ctl) Stat() *FileInfo {
+	return &ctl.FileInfo
+}
+
+func (ctl *Ctl) ReadDir() ([]Dir, error) {
+	return nil, errProtocol
+}
+
+func (ctl *Ctl) ReadFile() ([]byte, error) {
+	return []byte{}, nil
+}
+
+func (ctl *Ctl) WriteFile(p []byte) error {
+	s := string(p)
+	a := strings.Fields(s)
+	if len(a) == 0 {
+		return nil
+	}
+	switch a[0] {
+	case "refresh":
+		ctl.parent.Refresh()
+	default:
+		return errors.New("unknown command")
+	}
+	return nil
+}
+
+func (ctl *Ctl) Refresh() {
 }
