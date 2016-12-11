@@ -45,7 +45,9 @@ type Issue struct {
 }
 
 func (p *Issue) Key() string {
-	return fmt.Sprintf("%d", *p.issue.ID)
+	owner := p.repositoryOwner()
+	repo := p.repositoryName()
+	return fmt.Sprintf("%s@%s#%d", repo, owner, p.Number())
 }
 
 func (p *Issue) Subject() string {
@@ -89,13 +91,26 @@ func (p *Issue) Comments() (a []fs.Comment, err error) {
 	return a, nil
 }
 
-func (p *Issue) fetchComments(page int) ([]*github.IssueComment, int, error) {
+func (p *Issue) repositoryOwner() string {
 	owner := *p.issue.Repository.Owner.Login
 	if org := p.issue.Repository.Organization; org != nil {
 		owner = *org.Login
 	}
-	repo := *p.issue.Repository.Name
-	n := *p.issue.Number
+	return owner
+}
+
+func (p *Issue) repositoryName() string {
+	return *p.issue.Repository.Name
+}
+
+func (p *Issue) Number() int {
+	return *p.issue.Number
+}
+
+func (p *Issue) fetchComments(page int) ([]*github.IssueComment, int, error) {
+	owner := p.repositoryOwner()
+	repo := p.repositoryName()
+	n := p.Number()
 	var opt github.IssueListCommentsOptions
 	opt.Page = page
 	b, resp, err := p.svc.c.Issues.ListComments(owner, repo, n, &opt)
