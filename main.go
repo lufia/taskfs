@@ -15,6 +15,8 @@ var (
 	glAccessToken = flag.String("gitlab.t", "", "access token")
 	glBaseURL     = flag.String("gitlab.url", "", "endpoint url")
 	debug         = flag.Bool("d", false, "turn on debug print")
+
+	mtpt = "/mnt/taskfs"
 )
 
 func main() {
@@ -36,7 +38,10 @@ func main() {
 	root := fs.NewRoot()
 	root.CreateService(s)
 	root.CreateService(g)
-	if err := root.MountAndServe("x", *debug); err != nil {
+	if flag.NArg() > 0 {
+		mtpt = flag.Arg(0)
+	}
+	if err := root.MountAndServe(mtpt, *debug); err != nil {
 		log.Fatal(err)
 	}
 }
