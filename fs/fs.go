@@ -56,7 +56,6 @@ type Dir interface {
 	Stat() *FileInfo
 	ReadDir() ([]Dir, error)
 	ReadFile() ([]byte, error)
-	Refresh()
 }
 
 var errProtocol = errors.New("protocol botch")
@@ -111,9 +110,6 @@ func (*Root) ReadFile() ([]byte, error) {
 	return nil, errProtocol
 }
 
-func (*Root) Refresh() {
-}
-
 type ServiceDir struct {
 	Node
 	FileInfo
@@ -156,17 +152,20 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 			LastMod:  now,
 		},
 		parent: dir,
+		cmds: map[string]func(args ...string){
+			"refresh": dir.refreshDir,
+		},
 	}
 	dir.cache = dirs
 	return dirs, nil
 }
 
-func (*ServiceDir) ReadFile() ([]byte, error) {
-	return nil, errProtocol
+func (dir *ServiceDir) refreshDir(args ...string) {
+	dir.cache = nil
 }
 
-func (dir *ServiceDir) Refresh() {
-	dir.cache = nil
+func (*ServiceDir) ReadFile() ([]byte, error) {
+	return nil, errProtocol
 }
 
 type TaskDir struct {
@@ -203,9 +202,6 @@ func (*TaskDir) ReadFile() ([]byte, error) {
 	return nil, errProtocol
 }
 
-func (dir *TaskDir) Refresh() {
-}
-
 func (dir *TaskDir) newText(name, s string) *Text {
 	data := []byte(s)
 	return &Text{
@@ -238,9 +234,6 @@ func (t *Text) ReadDir() ([]Dir, error) {
 
 func (t *Text) ReadFile() ([]byte, error) {
 	return t.data, nil
-}
-
-func (t *Text) Refresh() {
 }
 
 type CommentText struct {
@@ -276,13 +269,11 @@ func (t *CommentText) ReadFile() ([]byte, error) {
 	return t.data, nil
 }
 
-func (t *CommentText) Refresh() {
-}
-
 type Ctl struct {
 	Node
 	FileInfo
 	parent Dir
+	cmds   map[string]func(args ...string)
 }
 
 func (ctl *Ctl) Stat() *FileInfo {
@@ -303,14 +294,10 @@ func (ctl *Ctl) WriteFile(p []byte) error {
 	if len(a) == 0 {
 		return nil
 	}
-	switch a[0] {
-	case "refresh":
-		ctl.parent.Refresh()
-	default:
+	fn, ok := ctl.cmds[a[0]]
+	if !ok {
 		return errors.New("unknown command")
 	}
+	fn(a[1:]...)
 	return nil
-}
-
-func (ctl *Ctl) Refresh() {
 }
