@@ -63,7 +63,8 @@ var errProtocol = errors.New("protocol botch")
 type Root struct {
 	Node
 	FileInfo
-	services map[string]Service
+	registers map[string]func(token, url string) (Service, error)
+	services  map[string]Service
 }
 
 func NewRoot() *Root {
@@ -75,12 +76,16 @@ func NewRoot() *Root {
 			Creation: now,
 			LastMod:  now,
 		},
-		services: make(map[string]Service),
+		registers: make(map[string]func(token, url string) (Service, error)),
+		services:  make(map[string]Service),
 	}
 }
 
-func (root *Root) CreateService(srv Service) {
-	root.services[srv.Name()] = srv
+func (root *Root) RegisterService(kind string, fn func(token, url string) (Service, error)) {
+	if _, ok := root.registers[kind]; ok {
+		panic("duplicate service register: " + kind)
+	}
+	root.registers[kind] = fn
 }
 
 func (root *Root) Stat() *FileInfo {
@@ -89,7 +94,7 @@ func (root *Root) Stat() *FileInfo {
 
 func (root *Root) ReadDir() ([]Dir, error) {
 	now := time.Now()
-	dirs := make([]Dir, 0, len(root.services))
+	dirs := make([]Dir, 0, len(root.services)+1) // +1: ctl file
 	for name, svc := range root.services {
 		dir := &ServiceDir{
 			Node: NewNode(),
@@ -103,7 +108,43 @@ func (root *Root) ReadDir() ([]Dir, error) {
 		}
 		dirs = append(dirs, dir)
 	}
+	dirs = append(dirs, &Ctl{
+		Node: NewNode(),
+		FileInfo: FileInfo{
+			Name:     "ctl",
+			Mode:     0644,
+			Creation: now,
+			LastMod:  now,
+		},
+		Commands: map[string]func(args ...string) error{
+			"add": root.addService,
+		},
+	})
 	return dirs, nil
+}
+
+func (root *Root) addService(args ...string) error {
+	var kind, token, url string
+	switch len(args) {
+	case 3:
+		url = args[2]
+		fallthrough
+	case 2:
+		token = args[1]
+		kind = args[0]
+		register := root.registers[kind]
+		if register == nil {
+			return errors.New("unsupported service type: " + kind)
+		}
+		srv, err := register(token, url)
+		if err != nil {
+			return err
+		}
+		root.services[srv.Name()] = srv
+		return nil
+	default:
+		return errors.New("invalid add command")
+	}
 }
 
 func (*Root) ReadFile() ([]byte, error) {
@@ -151,17 +192,17 @@ func (dir *ServiceDir) ReadDir() ([]Dir, error) {
 			Creation: now,
 			LastMod:  now,
 		},
-		parent: dir,
-		cmds: map[string]func(args ...string){
-			"refresh": dir.refreshDir,
+		Commands: map[string]func(args ...string) error{
+			"refresh": dir.refreshCache,
 		},
 	}
 	dir.cache = dirs
 	return dirs, nil
 }
 
-func (dir *ServiceDir) refreshDir(args ...string) {
+func (dir *ServiceDir) refreshCache(args ...string) error {
 	dir.cache = nil
+	return nil
 }
 
 func (*ServiceDir) ReadFile() ([]byte, error) {
@@ -272,8 +313,7 @@ func (t *CommentText) ReadFile() ([]byte, error) {
 type Ctl struct {
 	Node
 	FileInfo
-	parent Dir
-	cmds   map[string]func(args ...string)
+	Commands map[string]func(args ...string) error
 }
 
 func (ctl *Ctl) Stat() *FileInfo {
@@ -294,10 +334,9 @@ func (ctl *Ctl) WriteFile(p []byte) error {
 	if len(a) == 0 {
 		return nil
 	}
-	fn, ok := ctl.cmds[a[0]]
+	fn, ok := ctl.Commands[a[0]]
 	if !ok {
-		return errors.New("unknown command")
+		return errors.New("unknown control command")
 	}
-	fn(a[1:]...)
-	return nil
+	return fn(a[1:]...)
 }

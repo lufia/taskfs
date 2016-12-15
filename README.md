@@ -9,8 +9,11 @@ $ go get github.com/lufia/taskfs
 ## USAGE
 
 ```
-$ taskfs -t $github_token mtpt
+$ mkdir mtpt
+$ taskfs mtpt
+$ echo add github $github_token >mtpt/ctl
 $ ls mtpt/github
+$ cat mtpt/github/repo@user#1/message
 $ fusermount -u mtpt
 ```
 

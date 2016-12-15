@@ -10,34 +10,26 @@ import (
 )
 
 var (
-	accessToken   = flag.String("t", "", "access token")
-	baseURL       = flag.String("url", "", "endpoint url")
-	glAccessToken = flag.String("gitlab.t", "", "access token")
-	glBaseURL     = flag.String("gitlab.url", "", "endpoint url")
-	debug         = flag.Bool("d", false, "turn on debug print")
+	debug = flag.Bool("d", false, "turn on debug print")
 
 	mtpt = "/mnt/taskfs"
 )
 
 func main() {
 	flag.Parse()
-	s, err := github.NewService(&github.Config{
-		BaseURL: *baseURL,
-		Token:   *accessToken,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	g, err := gitlab.NewService(&gitlab.Config{
-		BaseURL: *glBaseURL,
-		Token:   *glAccessToken,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
 	root := fs.NewRoot()
-	root.CreateService(s)
-	root.CreateService(g)
+	root.RegisterService("github", func(token, url string) (fs.Service, error) {
+		return github.NewService(&github.Config{
+			BaseURL: url,
+			Token:   token,
+		})
+	})
+	root.RegisterService("gitlab", func(token, url string) (fs.Service, error) {
+		return gitlab.NewService(&gitlab.Config{
+			BaseURL: url,
+			Token:   token,
+		})
+	})
 	if flag.NArg() > 0 {
 		mtpt = flag.Arg(0)
 	}
