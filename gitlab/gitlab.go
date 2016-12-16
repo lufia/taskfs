@@ -31,14 +31,14 @@ func (p *Comment) LastMod() time.Time {
 
 type Issue struct {
 	issue *gitlab.Issue
+	proj  *gitlab.Project
 	svc   *Service
 }
 
 func (p *Issue) Key() string {
-	// TODO: implement
-	//group
-	//project
-	return fmt.Sprintf("%d", p.issue.ID)
+	owner := p.proj.Namespace.Name
+	repo := p.proj.Name
+	return fmt.Sprintf("%s@%s#%d", owner, repo, p.issue.IID)
 }
 
 func (p *Issue) Subject() string {
@@ -100,13 +100,18 @@ type Config struct {
 }
 
 type Service struct {
-	c *gitlab.Client
+	c        *gitlab.Client
+	projects map[int]*gitlab.Project
 }
 
 func NewService(config *Config) (*Service, error) {
 	c := gitlab.NewClient(nil, config.Token)
 	c.SetBaseURL(config.BaseURL)
-	return &Service{c: c}, nil
+	svc := &Service{
+		c:        c,
+		projects: make(map[int]*gitlab.Project),
+	}
+	return svc, nil
 }
 
 func (p *Service) Name() string {
@@ -121,7 +126,10 @@ func (p *Service) List() ([]fs.Task, error) {
 		if err != nil {
 			return nil, err
 		}
-		a = p.appendIssues(a, b)
+		a, err = p.convertAppendIssues(a, b)
+		if err != nil {
+			return nil, err
+		}
 		if resp.NextPage == 0 {
 			break
 		}
@@ -130,9 +138,25 @@ func (p *Service) List() ([]fs.Task, error) {
 	return a, nil
 }
 
-func (p *Service) appendIssues(a []fs.Task, b []*gitlab.Issue) []fs.Task {
+func (p *Service) convertAppendIssues(a []fs.Task, b []*gitlab.Issue) ([]fs.Task, error) {
 	for _, v := range b {
-		a = append(a, &Issue{issue: v, svc: p})
+		task, err := p.fetchTask(v)
+		if err != nil {
+			return nil, err
+		}
+		a = append(a, task)
 	}
-	return a
+	return a, nil
+}
+
+func (p *Service) fetchTask(v *gitlab.Issue) (task fs.Task, err error) {
+	proj := p.projects[v.ProjectID]
+	if proj == nil {
+		proj, _, err = p.c.Projects.GetProject(v.ProjectID)
+		if err != nil {
+			return
+		}
+		p.projects[v.ProjectID] = proj
+	}
+	return &Issue{issue: v, proj: proj, svc: p}, nil
 }
