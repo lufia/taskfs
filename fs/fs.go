@@ -8,6 +8,9 @@ mtpt/
 		1000111/
 			subject
 			message
+			1
+			2
+			3...
 */
 
 import (
