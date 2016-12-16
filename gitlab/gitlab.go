@@ -2,6 +2,7 @@ package gitlab
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/lufia/taskfs/fs"
@@ -101,21 +102,27 @@ type Config struct {
 
 type Service struct {
 	c        *gitlab.Client
+	name     string
 	projects map[int]*gitlab.Project
 }
 
 func NewService(config *Config) (*Service, error) {
+	u, err := url.Parse(config.BaseURL)
+	if err != nil {
+		return nil, err
+	}
 	c := gitlab.NewClient(nil, config.Token)
 	c.SetBaseURL(config.BaseURL)
 	svc := &Service{
 		c:        c,
+		name:     u.Host,
 		projects: make(map[int]*gitlab.Project),
 	}
 	return svc, nil
 }
 
 func (p *Service) Name() string {
-	return "gitlab"
+	return p.name
 }
 
 func (p *Service) List() ([]fs.Task, error) {

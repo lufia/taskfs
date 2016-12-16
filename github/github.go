@@ -137,7 +137,8 @@ func (c *Config) authorizedClient() *http.Client {
 }
 
 type Service struct {
-	c *github.Client
+	c    *github.Client
+	name string
 }
 
 func NewService(config *Config) (*Service, error) {
@@ -146,18 +147,20 @@ func NewService(config *Config) (*Service, error) {
 		client = config.authorizedClient()
 	}
 	c := github.NewClient(client)
+	name := "github.com"
 	if config.BaseURL != "" {
 		u, err := url.Parse(config.BaseURL)
 		if err != nil {
 			return nil, err
 		}
 		c.BaseURL = u
+		name = u.Host
 	}
-	return &Service{c: c}, nil
+	return &Service{c: c, name: name}, nil
 }
 
 func (p *Service) Name() string {
-	return "github"
+	return p.name
 }
 
 func (p *Service) List() ([]fs.Task, error) {
