@@ -20,6 +20,7 @@ $ fusermount -u mtpt
 ## DEVELOPMENT
 
 ```
+$ GOOS=linux go build -o taskfs
 $ docker build -t taskfs:latest .
 $ docker run -t -i --rm --cap-add SYS_ADMIN --device /dev/fuse taskfs
 ```
