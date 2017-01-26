@@ -333,13 +333,19 @@ func (ctl *Ctl) ReadFile() ([]byte, error) {
 
 func (ctl *Ctl) WriteFile(p []byte) error {
 	s := string(p)
-	a := strings.Fields(s)
-	if len(a) == 0 {
-		return nil
+	cmds := strings.Split(s, "\n")
+	for _, cmd := range cmds {
+		a := strings.Fields(cmd)
+		if len(a) == 0 {
+			return nil
+		}
+		fn, ok := ctl.Commands[a[0]]
+		if !ok {
+			return errors.New("unknown control command")
+		}
+		if err := fn(a[1:]...); err != nil {
+			return err
+		}
 	}
-	fn, ok := ctl.Commands[a[0]]
-	if !ok {
-		return errors.New("unknown control command")
-	}
-	return fn(a[1:]...)
+	return nil
 }
