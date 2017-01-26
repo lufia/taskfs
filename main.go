@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 
+	"github.com/lufia/taskfs/backlog"
 	"github.com/lufia/taskfs/fs"
 	"github.com/lufia/taskfs/github"
 	"github.com/lufia/taskfs/gitlab"
@@ -28,6 +29,12 @@ func main() {
 		return gitlab.NewService(&gitlab.Config{
 			BaseURL: url,
 			Token:   token,
+		})
+	})
+	root.RegisterService("backlog", func(token, url string) (fs.Service, error) {
+		return backlog.NewService(&backlog.Config{
+			BaseURL: url,
+			APIKey:  token,
 		})
 	})
 	if flag.NArg() > 0 {
