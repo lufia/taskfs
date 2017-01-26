@@ -28,7 +28,7 @@ func (p *Issue) Message() string {
 }
 
 func (p *Issue) PermaLink() string {
-	return fmt.Sprintf("https://%s/view/%s", p.svc.name, p.issue.IssueKey)
+	return fmt.Sprintf("https://%s/view/%s", p.svc.name, *p.issue.IssueKey)
 }
 
 func (p *Issue) Creation() time.Time {
@@ -94,7 +94,7 @@ func (p *Service) List() ([]fs.Task, error) {
 	}
 	a := make([]fs.Task, len(l))
 	for i, v := range l {
-		a[i] = &Issue{issue: v}
+		a[i] = &Issue{issue: v, svc: p}
 	}
 	return a, nil
 }
