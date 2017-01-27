@@ -12,8 +12,8 @@ $ go get github.com/lufia/taskfs
 $ mkdir mtpt
 $ taskfs mtpt
 $ echo add github $github_token >mtpt/ctl
-$ ls mtpt/github
-$ cat mtpt/github/repo@user#1/message
+$ ls mtpt/github.com
+$ cat mtpt/githubcom/repo@user#1/message
 $ fusermount -u mtpt
 ```
 
