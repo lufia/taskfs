@@ -82,7 +82,7 @@ func (p *Service) Name() string {
 
 func (p *Service) List() ([]fs.Task, error) {
 	l, err := p.c.IssuesWithOption(&backlog.IssuesOption{
-		AssigneeIds: []int{p.userID},
+		AssigneeIDs: []int{p.userID},
 		Statuses: []backlog.IssueStatus{
 			backlog.Open,
 			backlog.InProgress,
