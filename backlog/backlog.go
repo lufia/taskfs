@@ -68,7 +68,7 @@ func NewService(config *Config) (*Service, error) {
 	}
 	name := u.Host
 
-	c := backlog.NewClient(config.BaseURL, config.APIKey)
+	c := backlog.NewClient(u, config.APIKey)
 	user, err := c.Myself()
 	if err != nil {
 		return nil, err

@@ -1,6 +1,7 @@
 package github
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -108,12 +109,13 @@ func (p *Issue) Number() int {
 }
 
 func (p *Issue) fetchComments(page int) ([]*github.IssueComment, int, error) {
+	ctx := context.Background()
 	owner := p.repositoryOwner()
 	repo := p.repositoryName()
 	n := p.Number()
 	var opt github.IssueListCommentsOptions
 	opt.Page = page
-	b, resp, err := p.svc.c.Issues.ListComments(owner, repo, n, &opt)
+	b, resp, err := p.svc.c.Issues.ListComments(ctx, owner, repo, n, &opt)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -166,8 +168,9 @@ func (p *Service) Name() string {
 func (p *Service) List() ([]fs.Task, error) {
 	var a []fs.Task
 	var opt github.IssueListOptions
+	ctx := context.Background()
 	for {
-		b, resp, err := p.c.Issues.List(true, &opt)
+		b, resp, err := p.c.Issues.List(ctx, true, &opt)
 		if err != nil {
 			return nil, err
 		}
