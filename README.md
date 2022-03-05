@@ -3,7 +3,7 @@
 ## INSTALL
 
 ```
-$ go get github.com/lufia/taskfs
+$ go install github.com/lufia/taskfs@latest
 ```
 
 ## USAGE
