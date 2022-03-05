@@ -1,0 +1,12 @@
+name: Test
+
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+  schedule:
+  - cron: '0 14 10 * *'
+jobs:
+  test:
+    uses: lufia/workflows/.github/workflows/go-test.yml@main
