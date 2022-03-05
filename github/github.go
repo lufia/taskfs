@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v43/github"
 	"github.com/lufia/taskfs/fs"
 	"golang.org/x/oauth2"
 )

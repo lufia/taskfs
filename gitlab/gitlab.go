@@ -111,8 +111,10 @@ func NewService(config *Config) (*Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	c := gitlab.NewClient(nil, config.Token)
-	c.SetBaseURL(config.BaseURL)
+	c, err := gitlab.NewClient(config.Token, gitlab.WithBaseURL(config.BaseURL))
+	if err != nil {
+		return nil, err
+	}
 	svc := &Service{
 		c:        c,
 		name:     u.Host,
@@ -159,7 +161,7 @@ func (p *Service) convertAppendIssues(a []fs.Task, b []*gitlab.Issue) ([]fs.Task
 func (p *Service) fetchTask(v *gitlab.Issue) (task fs.Task, err error) {
 	proj := p.projects[v.ProjectID]
 	if proj == nil {
-		proj, _, err = p.c.Projects.GetProject(v.ProjectID)
+		proj, _, err = p.c.Projects.GetProject(v.ProjectID, nil)
 		if err != nil {
 			return
 		}
