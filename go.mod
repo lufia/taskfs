@@ -6,7 +6,7 @@ require (
 	github.com/google/go-github/v43 v43.0.0
 	github.com/griffin-stewie/go-backlog v0.0.0-20180115130933-90b046914fbe
 	github.com/hanwen/go-fuse v1.0.0
-	github.com/xanzy/go-gitlab v0.81.0
+	github.com/xanzy/go-gitlab v0.82.0
 	golang.org/x/oauth2 v0.6.0
 )
 
@@ -20,5 +20,5 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.29.0 // indirect
+	google.golang.org/protobuf v1.29.1 // indirect
 )
