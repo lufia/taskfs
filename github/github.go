@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/google/go-github/v43/github"
+	"github.com/google/go-github/v51/github"
 	"github.com/lufia/taskfs/fs"
 	"golang.org/x/oauth2"
 )
@@ -33,11 +33,11 @@ func (p *Comment) Message() string {
 }
 
 func (p *Comment) Creation() time.Time {
-	return *p.comment.CreatedAt
+	return p.comment.CreatedAt.Time
 }
 
 func (p *Comment) LastMod() time.Time {
-	return *p.comment.UpdatedAt
+	return p.comment.UpdatedAt.Time
 }
 
 type Issue struct {
@@ -64,11 +64,11 @@ func (p *Issue) PermaLink() string {
 }
 
 func (p *Issue) Creation() time.Time {
-	return *p.issue.CreatedAt
+	return p.issue.CreatedAt.Time
 }
 
 func (p *Issue) LastMod() time.Time {
-	return *p.issue.UpdatedAt
+	return p.issue.UpdatedAt.Time
 }
 
 func (p *Issue) Comments() (a []fs.Comment, err error) {
