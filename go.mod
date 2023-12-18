@@ -6,7 +6,7 @@ require (
 	github.com/google/go-github/v51 v51.0.0
 	github.com/griffin-stewie/go-backlog v0.0.0-20180115130933-90b046914fbe
 	github.com/hanwen/go-fuse v1.0.0
-	github.com/xanzy/go-gitlab v0.95.1
+	github.com/xanzy/go-gitlab v0.95.2
 	golang.org/x/oauth2 v0.15.0
 )
 
