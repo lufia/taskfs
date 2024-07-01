@@ -25,8 +25,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
-github.com/xanzy/go-gitlab v0.105.0 h1:3nyLq0ESez0crcaM19o5S//SvezOQguuIHZ3wgX64hM=
-github.com/xanzy/go-gitlab v0.105.0/go.mod h1:ETg8tcj4OhrB84UEgeE8dSuV/0h4BBL1uOV/qK0vlyI=
+github.com/xanzy/go-gitlab v0.106.0 h1:EDfD03K74cIlQo2EducfiupVrip+Oj02bq9ofw5F8sA=
+github.com/xanzy/go-gitlab v0.106.0/go.mod h1:ETg8tcj4OhrB84UEgeE8dSuV/0h4BBL1uOV/qK0vlyI=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
 golang.org/x/crypto v0.21.0 h1:X31++rzVUdKhX5sWmSOFZxx8UW/ldWx55cbf08iNAMA=
 golang.org/x/crypto v0.21.0/go.mod h1:0BP7YvVV9gBbVKyeTG0Gyn+gZm94bibOW5BjDEYAOMs=
