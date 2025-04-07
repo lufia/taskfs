@@ -9,7 +9,7 @@ require (
 	github.com/griffin-stewie/go-backlog v0.0.0-20180115130933-90b046914fbe
 	github.com/hanwen/go-fuse v1.0.0
 	github.com/xanzy/go-gitlab v0.115.0
-	golang.org/x/oauth2 v0.28.0
+	golang.org/x/oauth2 v0.29.0
 )
 
 require (
