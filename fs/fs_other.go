@@ -12,7 +12,7 @@ type Node interface {
 type node struct{}
 
 func NewNode() Node {
-	return  &node{}
+	return &node{}
 }
 
 func (*node) MountAndServe(mtpt string, debug bool) error {

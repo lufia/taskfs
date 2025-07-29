@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/google/go-github/v51/github"
+	"github.com/google/go-github/v74/github"
 	"github.com/lufia/taskfs/fs"
 	"golang.org/x/oauth2"
 )
@@ -178,7 +178,7 @@ func (p *Service) List() ([]fs.Task, error) {
 		if resp.NextPage == 0 {
 			break
 		}
-		opt.Page = resp.NextPage
+		opt.ListOptions.Page = resp.NextPage
 	}
 	return a, nil
 }
